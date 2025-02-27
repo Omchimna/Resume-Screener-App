@@ -27,8 +27,8 @@ def generate_radar_chart(candidate_name, ratings):
 
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(categories)
-    ax.set_yticklabels(['0', '1', '2', '3', '4', '5']) # Set y-axis ticks for ratings 0-5 (adjust as needed)
     ax.set_yticks(range(6)) # Ensure ticks are at 0, 1, 2, 3, 4, 5
+    ax.set_yticklabels(['0', '1', '2', '3', '4', '5']) # Set y-axis ticks for ratings 0-5 (adjust as needed)
     ax.set_ylim(0, 5) # Set y-axis limits to 0-5
 
     ax.set_title(f"Parameter Ratings for {candidate_name}", y=1.05) # Title outside plot area
