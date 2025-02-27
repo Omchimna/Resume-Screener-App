@@ -103,7 +103,7 @@ st.title("Resume Screener App")
 
 # --- **Hardcoded API Key (Use with caution! For personal use only)** ---
 #google_api_key = "AIzaSyDkwD7CDw2MmUykHyhvXTbfkjMshMjwudg"  # **Replace with your actual API key**
-google_api_key = st.secret['GOOGLE_API_KEY']  # **Replace with your actual API key**
+google_api_key = st.secrets['GOOGLE_API_KEY']  # **Replace with your actual API key**
 # --- **End of Hardcoded API Key** ---
 
 
