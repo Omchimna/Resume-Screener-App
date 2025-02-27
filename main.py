@@ -22,16 +22,19 @@ def generate_radar_chart(candidate_name, ratings):
 
     fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True)) # Adjust size
 
+    fig.set_facecolor('#0E1117')
     ax.plot(angles, data_values, 'o-', linewidth=2) # Added markers
     ax.fill(angles, data_values, alpha=0.25)
-
+    ax.set_facecolor('#0E1117')
+    
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories)
+    ax.set_xticklabels(categories,color="white")
     ax.set_yticks(range(6)) # Ensure ticks are at 0, 1, 2, 3, 4, 5
-    ax.set_yticklabels(['0', '1', '2', '3', '4', '5']) # Set y-axis ticks for ratings 0-5 (adjust as needed)
+    ax.set_yticklabels(['0', '1', '2', '3', '4', '5'],color="white") # Set y-axis ticks for ratings 0-5 (adjust as needed)
+    # ax.set_yticklabels(5)
     ax.set_ylim(0, 5) # Set y-axis limits to 0-5
 
-    ax.set_title(f"Parameter Ratings for {candidate_name}", y=1.05) # Title outside plot area
+    ax.set_title(f"Parameter Ratings for {candidate_name}", y=1.05,color="white") # Title outside plot area
     ax.title.set_fontsize(14) # Adjust title fontsize
 
     return fig
@@ -41,7 +44,10 @@ def generate_radar_chart(candidate_name, ratings):
 # --- Streamlit App ---
 st.title("Resume Screener App")
 
-google_api_key = st.secrets["GOOGLE_API_KEY"]
+# --- **Hardcoded API Key (Use with caution! For personal use only)** ---
+google_api_key = "AIzaSyDkwD7CDw2MmUykHyhvXTbfkjMshMjwudg" 
+# google_api_key = st.secrets["GOOGLE_API_KEY"] # **Replace with your actual API key**
+# --- **End of Hardcoded API Key** ---
 
 job_description = st.text_area("Enter Job Description:", height=200)
 uploaded_files = st.file_uploader("Upload Resumes (PNG, JPG, PDF):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'pdf'])
