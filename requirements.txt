@@ -1,6 +1,5 @@
 # streamlit
-nltk
-PyPDF2
-Pillow
-pytesseract
 google-generativeai
+pillow
+matplotlib
+pymupdf
