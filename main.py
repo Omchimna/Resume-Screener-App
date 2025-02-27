@@ -5,6 +5,7 @@ import base64
 from PIL import Image
 import io
 import re
+import matplotlib.pyplot as plt  # Import matplotlib
 
 # --- Gemini API Interaction Function ---
 def query_gemini_direct(image_path: str, text_query: str, google_api_key: str) -> str:
@@ -101,11 +102,7 @@ def analyze_resume(image_file, job_description, api_key):
 # --- Streamlit App ---
 st.title("Resume Screener App")
 
-# --- **Hardcoded API Key (Use with caution! For personal use only)** ---
-#google_api_key = "AIzaSyDkwD7CDw2MmUykHyhvXTbfkjMshMjwudg"  # **Replace with your actual API key**
-google_api_key = st.secrets['GOOGLE_API_KEY']  # **Replace with your actual API key**
-# --- **End of Hardcoded API Key** ---
-
+google_api_key = st.secrets["GOOGLE_API_KEY"]  # **Replace with your actual API key**
 
 job_description = st.text_area("Enter Job Description:", height=200)
 uploaded_files = st.file_uploader("Upload Resumes (PNG, JPG, PDF):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'pdf'])
@@ -169,7 +166,14 @@ if uploaded_files and job_description: # Removed google_api_key from here as it'
 
             if candidate_names and fit_percentages:
                 st.subheader("Candidate Fit Comparison")
-                chart_data = {"Candidate": candidate_names, "Fit Percentage": fit_percentages}
-                st.bar_chart(chart_data, x="Candidate", y="Fit Percentage")
+                # --- Matplotlib Bar Chart ---
+                fig, ax = plt.subplots()
+                ax.bar(candidate_names, fit_percentages)
+                ax.set_xlabel("Candidate")
+                ax.set_ylabel("Fit Percentage")
+                ax.set_title("Candidate Fit Comparison")
+                plt.xticks(rotation=45, ha='right') # Rotate x-axis labels for better readability
+                st.pyplot(fig) # Display Matplotlib chart in Streamlit
+                # --- End Matplotlib Bar Chart ---
         else:
             st.info("No resumes were analyzed.")
