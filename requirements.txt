@@ -1,0 +1,5 @@
+# streamlit
+nltk
+PyPDF2
+Pillow
+pytesseract
