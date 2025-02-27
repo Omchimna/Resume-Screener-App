@@ -4,6 +4,7 @@ import os
 import base64
 from PIL import Image
 import io
+import re
 
 # --- Gemini API Interaction Function ---
 def query_gemini_direct(image_path: str, text_query: str, google_api_key: str) -> str:
@@ -27,26 +28,11 @@ def query_gemini_direct(image_path: str, text_query: str, google_api_key: str) -
 
 # --- Resume Analysis and Rating Function ---
 def analyze_resume(image_file, job_description, api_key):
-    """
-    Analyzes a single resume image against a job description using Gemini API and provides ratings.
-
-    Args:
-        image_file: Uploaded file object (resume image).
-        job_description: Text of the job description.
-        api_key: Google API key.
-
-    Returns:
-        dict: Dictionary containing ratings for different parameters and overall fit percentage.
-              Returns None if there's an error in analysis.
-    """
     try:
-        # Save uploaded file temporarily to disk for processing
-        temp_image_path = "temp_resume.png" # You can use a more robust temp file mechanism if needed
+        temp_image_path = "temp_resume.png"
         img = Image.open(image_file)
         img.save(temp_image_path)
 
-
-        # Construct Gemini prompt - Adjusted for structured output
         prompt_text = f"""
         Analyze the resume image provided in relation to the following job description:
 
@@ -65,16 +51,9 @@ def analyze_resume(image_file, job_description, api_key):
 
         Finally, calculate an overall percentage fit (0-100%) of this resume for the job description.
         Overall Fit Percentage: [Percentage]%
-
-        --- Response format example --- (Do not include this in your actual response, just follow the format)
-        1. Years of Experience: Rating: 4/5, Justification: Good experience in related field.
-        2. Skills Match: Rating: 5/5, Justification:  Excellent alignment with required skills.
-        ...
-        Overall Fit Percentage: 85%
         """
 
         gemini_response_text = query_gemini_direct(temp_image_path, prompt_text, api_key)
-
 
         if gemini_response_text:
             ratings = {}
@@ -82,9 +61,9 @@ def analyze_resume(image_file, job_description, api_key):
             for line in lines:
                 if "Rating:" in line:
                     parts = line.split("Rating:")
-                    parameter_name = parts[0].strip().rstrip(':') # Extract parameter name
+                    parameter_name = parts[0].strip().rstrip(':')
                     rating_and_justification = parts[1].strip().split(', Justification:')
-                    rating_str = rating_and_justification[0].split('/')[0].strip() # Get just the rating number
+                    rating_str = rating_and_justification[0].split('/')[0].strip()
                     justification = rating_and_justification[1].strip() if len(rating_and_justification) > 1 else "N/A"
 
                     try:
@@ -93,36 +72,47 @@ def analyze_resume(image_file, job_description, api_key):
                     except ValueError:
                         print(f"Warning: Could not parse rating value from line: {line}")
 
-
                 elif "Overall Fit Percentage:" in line:
-                    percentage_str = line.split("Overall Fit Percentage:")[1].strip().rstrip('%')
-                    try:
-                        ratings["overall_fit_percentage"] = float(percentage_str)
-                    except ValueError:
-                        ratings["overall_fit_percentage"] = None
-                        print(f"Warning: Could not parse percentage value from line: {line}")
+                    # --- Improved Percentage Parsing using Regex ---
+                    import re  # Import regular expression module
 
-            os.remove(temp_image_path) # Clean up temp image file
+                    percentage_match = re.search(r'(\d+\.?\d*)%', line) # Regex to find numbers ending with %
+                    if percentage_match:
+                        percentage_str = percentage_match.group(1) # Extract the captured number (group 1)
+                        try:
+                            ratings["overall_fit_percentage"] = float(percentage_str)
+                        except ValueError:
+                            ratings["overall_fit_percentage"] = None
+                            print(f"Warning: Could not parse percentage value (regex failed to convert to float) from line: {line}")
+                    else:
+                        ratings["overall_fit_percentage"] = None
+                        print(f"Warning: Could not parse percentage value (regex no match) from line: {line}")
+                    # --- End Improved Percentage Parsing ---
             return ratings
         else:
-            os.remove(temp_image_path)
             return None
 
     except Exception as e:
         print(f"Error analyzing resume: {e}")
+        st.error(f"Detailed Error: {e}")
         return None
 
 
 # --- Streamlit App ---
 st.title("Resume Screener App")
 
-google_api_key = st.text_input("Enter your Google API Key:", type="password")
+# --- **Hardcoded API Key (Use with caution! For personal use only)** ---
+#google_api_key = "AIzaSyDkwD7CDw2MmUykHyhvXTbfkjMshMjwudg"  # **Replace with your actual API key**
+google_api_key = os.environ['GOOGLE_API_KEY']  # **Replace with your actual API key**
+# --- **End of Hardcoded API Key** ---
+
+
 job_description = st.text_area("Enter Job Description:", height=200)
 uploaded_files = st.file_uploader("Upload Resumes (PNG, JPG, PDF):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'pdf'])
 
-if uploaded_files and job_description and google_api_key:
+if uploaded_files and job_description: # Removed google_api_key from here as it's hardcoded
     if not google_api_key.startswith('AIza'):
-        st.warning('Please enter your Google API key!', icon='⚠️')
+        st.warning('Please enter your Google API key!', icon='⚠️') # Keep warning in case hardcoded key is invalid, but it will likely always show now
     else:
         st.subheader("Resume Analysis Results:")
         resume_data = []
@@ -135,7 +125,7 @@ if uploaded_files and job_description and google_api_key:
                 if analysis_result:
                     resume_data.append({"filename": file_name, "analysis": analysis_result})
                 else:
-                    resume_data.append({"filename": file_name, "analysis": None, "error": "Analysis failed"}) # Indicate analysis failure
+                    resume_data.append({"filename": file_name, "analysis": None, "error": "Analysis failed"})
 
 
         if resume_data:
@@ -150,9 +140,8 @@ if uploaded_files and job_description and google_api_key:
                     analysis = data["analysis"]
 
                     candidate_names.append(data["filename"])
-                    fit_percentages.append(analysis.get("overall_fit_percentage", 0)) # Default to 0 if percentage missing
+                    fit_percentages.append(analysis.get("overall_fit_percentage", 0))
 
-                    # Display Parameter Ratings and Justifications
                     if analysis.get("Years of Experience"):
                         st.write(f"- **Years of Experience:** Rating: {analysis['Years of Experience']['rating']}/5")
                         st.caption(f"  *Justification:* {analysis['Years of Experience']['justification']}")
