@@ -147,9 +147,7 @@ def analyze_resume(image_file, job_description, api_key):
 # --- Streamlit App ---
 st.title("Resume Screener App")
 
-# --- **Hardcoded API Key (Use with caution! For personal use only)** ---
-google_api_key = "AIzaSyDkwD7CDw2MmUykHyhvXTbfkjMshMjwudg"  # **Replace with your actual API key**
-# --- **End of Hardcoded API Key** ---
+google_api_key = st.secrets["GOOGLE_API_KEY"]
 
 job_description = st.text_area("Enter Job Description:", height=200)
 uploaded_files = st.file_uploader("Upload Resumes (PNG, JPG, PDF):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'pdf'])
