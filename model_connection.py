@@ -1,10 +1,15 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
-import ast 
+import ast
+import pymupdf
+
+
+google_api_key = st.secrets["GOOGLE_API_KEY"] 
+
 
 # --- Gemini API Interaction Function ---
-def query_gemini_direct(image_path: str, text_query: str, google_api_key: str) -> str:
+def query_gemini_direct(image_path: str, text_query: str) -> str: # Removed api_key parameter
     try:
         genai.configure(api_key=google_api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
@@ -22,15 +27,26 @@ def query_gemini_direct(image_path: str, text_query: str, google_api_key: str) -
     except Exception as e:
         print(f"Error querying Gemini API (Direct - 1.5-flash): {e}")
         return None
-    
 
 
 # --- Resume Analysis and Rating Function (Tuple Extraction + Parse Version) ---
-def analyze_resume(image_file, job_description, api_key):
+def analyze_resume(uploaded_file, job_description): # Changed file to uploaded_file, removed api_key parameter
     try:
+        # file_name = uploaded_file.name
+        # file_type = uploaded_file.type
         temp_image_path = "temp_resume.png"
-        img = Image.open(image_file)
-        img.save(temp_image_path)
+        image_data = None # No longer needed
+        mime_type = None # No longer needed
+
+        if uploaded_file.type == "application/pdf":
+            img = pdf_To_Img(uploaded_file)
+        elif uploaded_file.type.startswith("image/"): # Handle image files (png, jpg, jpeg)
+            img = Image.open(uploaded_file) # Open directly as PIL Image
+        else:
+            raise ValueError(f"Unsupported file type: {uploaded_file.type} for file: {uploaded_file.name}")
+
+        # --- Now, process the PIL Image ---
+        img.save(temp_image_path) # Save as temp PNG for Gemini
 
         prompt_text = f"""
         Analyze the resume image provided in relation to the following job description:
@@ -73,7 +89,7 @@ def analyze_resume(image_file, job_description, api_key):
                 Strictly follow the output format specified above and return it as plain text, without any code formatting or anytype of this text "print(resume_evaluation)"
         """
 
-        gemini_response_text = query_gemini_direct(temp_image_path, prompt_text, api_key)
+        gemini_response_text = query_gemini_direct(temp_image_path, prompt_text) # Removed api_key parameter
 
         if gemini_response_text:
             ratings = {}
@@ -118,7 +134,7 @@ def analyze_resume(image_file, job_description, api_key):
 
                 # Handle Overall Percentage (it's in a list, extract the float):
                 if overall_fit_percentage_list and isinstance(overall_fit_percentage_list, list) and len(overall_fit_percentage_list) > 0:
-                    ratings["overall_fit_percentage"] = float(overall_fit_percentage_list[0]) # Extract float from list
+                        ratings["overall_fit_percentage"] = float(overall_fit_percentage_list[0]) # Extract float from list
                 else:
                     ratings["overall_fit_percentage"] = None # Handle case if percentage is not properly returned
 
@@ -132,10 +148,29 @@ def analyze_resume(image_file, job_description, api_key):
                 return None # or return an error indicator as needed
 
 
-        else:
-            return None # Gemini API query failed
+            else:
+                return None # Gemini API query failed
+        else: # Should not reach here due to file type check at the beginning, but for robustness
+            return None
 
     except Exception as e:
         print(f"Error analyzing resume: {e}")
         st.error(f"Detailed Error: {e}")
         return None
+
+
+def pdf_To_Img(pdf_file):
+    doc = pymupdf.open(pdf_file)
+    if len(doc)>1:      
+        new_im=Image.new('RGB', (4000,10000))
+        i,pix=0,0
+        while(i<len(doc)):
+            im=doc[i].get_pixmap(matrix=pymupdf.Identity,dpi=250).pil_image()
+            new_im.paste(im, (0,pix))
+            i+=1
+            pix+=(((im.size)[1])+2)
+            
+        return new_im
+
+    elif len(doc)==1:
+        return doc[0].get_pixmap(matrix=pymupdf.Identity,dpi=250).pil_image()
