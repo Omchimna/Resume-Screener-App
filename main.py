@@ -155,7 +155,7 @@ if uploaded_files and job_description: # Removed google_api_key from here as it'
             if candidate_names and fit_percentages:
                 st.subheader("Candidate Fit Comparison")
                 fig_bar, ax_bar = plt.subplots()
-                fig.set_facecolor('#0E1117')
+                fig_bar.set_facecolor('#0E1117')
                 ax_bar.bar(candidate_names, fit_percentages)
                 ax_bar.set_xlabel("Candidate",color="white")
                 ax_bar.set_ylabel("Fit Percentage",color="white")
