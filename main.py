@@ -50,7 +50,7 @@ google_api_key = "AIzaSyDkwD7CDw2MmUykHyhvXTbfkjMshMjwudg"
 # --- **End of Hardcoded API Key** ---
 
 job_description = st.text_area("Enter Job Description:", height=200)
-uploaded_files = st.file_uploader("Upload Resumes (PNG, JPG, PDF):", accept_multiple_files=True, type=['png', 'jpg', 'jpeg', 'pdf'])
+uploaded_files = st.file_uploader("Upload Resumes **(Images Only)**:", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
 
 if uploaded_files and job_description: # Removed google_api_key from here as it's hardcoded
     if not google_api_key.startswith('AIza'):
@@ -155,11 +155,13 @@ if uploaded_files and job_description: # Removed google_api_key from here as it'
             if candidate_names and fit_percentages:
                 st.subheader("Candidate Fit Comparison")
                 fig_bar, ax_bar = plt.subplots()
-                fig_bar.set_facecolor('#0E1117')
+                fig_bar.set_facecolor('#60709f')
                 ax_bar.bar(candidate_names, fit_percentages)
-                ax_bar.set_xlabel("Candidate",color="white")
-                ax_bar.set_ylabel("Fit Percentage",color="white")
+                ax_bar.set_xlabel("Candidate")
+                ax_bar.set_xticklabels(candidate_names)
+                ax_bar.set_ylabel("Fit Percentage")
                 ax_bar.set_title("Overall Candidate Fit Comparison",color="white") # More descriptive title
+                ax_bar.set_facecolor('#60709f')
                 plt.xticks(rotation=45, ha='right')
                 st.pyplot(fig_bar)
                 plt.close(fig_bar) # Close bar chart figure
