@@ -149,6 +149,7 @@ if uploaded_files and job_description:
             fig_bar.set_facecolor('#60709f')
             ax_bar.bar(candidate_names, fit_percentages)
             ax_bar.set_xlabel("Candidate")
+            ax_bar.set_xticks(range(len(candidate_names)))
             ax_bar.set_xticklabels(candidate_names)
             ax_bar.set_ylabel("Fit Percentage")
             ax_bar.set_title("Overall Candidate Fit Comparison",color="white") # More descriptive title
