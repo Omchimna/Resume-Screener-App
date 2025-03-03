@@ -39,7 +39,8 @@ def analyze_resume(uploaded_file, job_description): # Changed file to uploaded_f
         mime_type = None # No longer needed
 
         if uploaded_file.type == "application/pdf":
-            img = pdf_To_Img(uploaded_file)
+            pdf_bytes = uploaded_file.read()  # Read PDF content as bytes
+            img = pdf_To_Img(pdf_bytes)  # Pass the bytes to pdf_To_Img
         elif uploaded_file.type.startswith("image/"): # Handle image files (png, jpg, jpeg)
             img = Image.open(uploaded_file) # Open directly as PIL Image
         else:
@@ -159,8 +160,8 @@ def analyze_resume(uploaded_file, job_description): # Changed file to uploaded_f
         return None
 
 
-def pdf_To_Img(pdf_file):
-    doc = pymupdf.open(pdf_file)
+def pdf_To_Img(pdf_bytes):
+    doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
     if len(doc)>1:      
         new_im=Image.new('RGB', (4000,10000))
         i,pix=0,0
